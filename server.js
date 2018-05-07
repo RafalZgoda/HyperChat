@@ -18,8 +18,8 @@ const sequelize = new Sequelize('HyperChat', 'postgres', 'root', {
 // Definition of our messages from pg
 const Messages = sequelize.define('messages', {
   message: Sequelize.STRING,
+  roomName: Sequelize.STRING,
   userHash: Sequelize.STRING,
-  room: Sequelize.STRING,
 });
 
 
@@ -27,8 +27,8 @@ const Messages = sequelize.define('messages', {
 sequelize.sync()
   .then(() => Messages.create({
     message: "Test Message ",
+    roomName: "01",
     userHash: sha256("secret"),
-    room: "01",
   }))
   .then(m => {
     console.log(m.toJSON());
@@ -42,14 +42,22 @@ const typeDefs = `
     message: String
     createdAt: String!
     userHash: String
+    roomName: String
+  }
+
+  type Room {
+    name: String
+    numberOfMessages: Int
   }
 
   type Query {
-    messages(room: String!, since: Int): [Message!]
+    getMessages(roomName: String!, since: Int): [Message!]
+    getRooms: [Room!]
+
   }
 
   type Mutation {
-    post(msg: String!, room: String!, secret: String): Message!
+    post(msg: String!, roomName: String!, secret: String): Message!
   }
 `;
 
@@ -57,23 +65,29 @@ const typeDefs = `
 const resolvers = {
 
   Query: {
-    messages: function(root, {room, since}) {
+    getMessages: function(root, {roomName, since}) {
       return Messages.findAll({
         where: {
           id: {
             [Op.gte]: since,
           },
-          room: room
+          roomName: roomName
         }
       });
+    },
+    getRooms: function() {
+      return Messages.findAll({
+        attributes: [['roomName', 'name'], [sequelize.fn('COUNT', 'Messages.id'), 'numberOfMessages']],
+        group: ['name']
+      })
     }
   },
 
   Mutation: {
-    post:function (root, {msg, room, secret}) {
+    post:function (root, {msg, roomName, secret}) {
       Messages.create({
         message: msg,
-        room: room, 
+        roomName: roomName,
         userHash: sha256(secret)
       });
       return msg
