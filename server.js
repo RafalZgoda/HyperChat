@@ -18,15 +18,17 @@ const sequelize = new Sequelize('HyperChat', 'postgres', 'root', {
 // Definition of our messages from pg
 const Messages = sequelize.define('messages', {
   message: Sequelize.STRING,
-  userHash: Sequelize.STRING
+  userHash: Sequelize.STRING,
+  room: Sequelize.STRING,
 });
 
 
 // testing purpose (and table creation if not defined)
 sequelize.sync()
   .then(() => Messages.create({
-    message: "message",
-    userHash: sha256("secret")
+    message: "Test Message ",
+    userHash: sha256("secret"),
+    room: "01",
   }))
   .then(m => {
     console.log(m.toJSON());
@@ -43,11 +45,11 @@ const typeDefs = `
   }
 
   type Query {
-    messages(since: Int): [Message!]
+    messages(room: String!, since: Int): [Message!]
   }
 
   type Mutation {
-    post(msg: String!, secret: String): Message!
+    post(msg: String!, room: String!, secret: String): Message!
   }
 `;
 
@@ -55,23 +57,23 @@ const typeDefs = `
 const resolvers = {
 
   Query: {
-    messages: function(root, {since}) {
-    //  var lastId = Messages.get(since)
-    //  console.log(lastId)
+    messages: function(root, {room, since}) {
       return Messages.findAll({
         where: {
           id: {
             [Op.gte]: since,
-          }
+          },
+          room: room
         }
       });
     }
   },
 
   Mutation: {
-    post:function (root, {msg, secret}) {
+    post:function (root, {msg, room, secret}) {
       Messages.create({
         message: msg,
+        room: room, 
         userHash: sha256(secret)
       });
       return msg
