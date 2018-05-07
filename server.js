@@ -3,23 +3,33 @@ const bodyParser = require('body-parser');
 const { graphqlExpress, graphiqlExpress } = require('apollo-server-express');
 const { makeExecutableSchema } = require('graphql-tools');
 const Sequelize = require('sequelize');
+var sha256 = require('js-sha256');
 
 // Load db from postgres
 const sequelize = new Sequelize('HyperChat', 'postgres', 'root', {
   host: 'localhost',
   dialect: 'postgres',
   operatorsAliases: false,
+  alter: true,
 });
 
 // Definition of our messages from pg
-const messages = sequelize.define('message', {
-  message: Sequelize.STRING
+const Messages = sequelize.define('messages', {
+  message: Sequelize.STRING,
+  userHash: Sequelize.STRING
 });
 
+
 // testing purpose
-messages.create({
-  message: "message"
-});
+sequelize.sync()
+  .then(() => Messages.create({
+    message: "message",
+    userHash: sha256("secret")
+  }))
+  .then(m => {
+    console.log(m.toJSON());
+  });
+
 
 // the GraphQL schema in string form
 const typeDefs = `
@@ -27,6 +37,7 @@ const typeDefs = `
     id: Int!
     message: String
     createdAt: String!
+    userHash: String
   }
 
   type Query {
@@ -34,7 +45,7 @@ const typeDefs = `
   }
 
   type Mutation {
-    post(msg: String!): Message!
+    post(msg: String!, secret: String): Message!
   }
 `;
 
@@ -42,16 +53,19 @@ const typeDefs = `
 const resolvers = {
 
   Query: {
-    messages() {
-      return messages.findAll();
+    messages: function() {
+      return Messages.findAll();
     }
   },
 
   Mutation: {
-    post:function (msg) {
-      return messages.create({
-        message: msg
+    post:function (root, {msg, secret}) {
+      console.log(sha256())
+      Messages.create({
+        message: msg,
+        userHash: sha256(secret)
       });
+      return msg
     },
   },
 };
