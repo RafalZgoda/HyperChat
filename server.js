@@ -13,7 +13,7 @@ const sequelize = new Sequelize('HyperChat', 'postgres', 'root', {
 
 // Definition of our messages from pg
 const messages = sequelize.define('message', {
-  message: Sequelize.STRING//,
+  message: Sequelize.STRING
 });
 
 // testing purpose
@@ -33,13 +33,9 @@ const typeDefs = `
     messages: [Message!]
   }
 
-
   type Mutation {
     post(msg: String!): Message!
-    toto(t:Int): String
   }
-
-
 `;
 
 // The resolvers
