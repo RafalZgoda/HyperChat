@@ -15,21 +15,46 @@ Open http://localhost:3000/graphiql
 # Query
 
 ```
-Add queries like :
+Add queries :
 
-query Messages{
-	messages(since:5){
+query getMessages{
+	getMessages(roomName:"42",since:1){
     id
-    message
     createdAt
+    message
+    roomName
     userHash
   }
 }
 
-mutation post($t: String!, $secret: String) {
- post(msg:$t, secret:$secret) {
-  message	
-  userHash
- }
+mutation post($msg: String!,$room: String!, $secret: String) {
+	post(msg:$msg, roomName:$room, secret:$secret) {
+    message
+    userHash
+    roomName
+ 	}
 }
+
+
+query getRooms{
+	getRooms{
+		name
+    numberOfMessages
+  }
+}
+
+
+```
+
+# Variable
+
+```
+
+{
+  "msg": "Query Graphiql",
+  "room": "42",
+  "secret": "public"
+}
+
+
 ```
