@@ -5,29 +5,31 @@ HyperChat is a very simple chat API that allows anyone to chat with people acros
 # Installation
 
 ```
-
 Install NodeJS > 7
 Install Postgresql and create table HyperChat
 npm install
 node server.js
 Open http://localhost:3000/graphiql
+```
+
+# Query
+
+```
 Add queries like :
 
-query messages{
-	messages{
+query Messages{
+	messages(since:5){
     id
     message
     createdAt
+    userHash
   }
 }
 
-
-mutation post{
-      post(message: "test message !") {
-        message
-      }
-
+mutation post($t: String!, $secret: String) {
+ post(msg:$t, secret:$secret) {
+  message	
+  userHash
+ }
 }
-
-
 ```
